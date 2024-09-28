@@ -7,7 +7,7 @@ import path from "path"
 // console.log("0-0-0-0-",path.join(__dirname,"..", 'public'));
 
 
-const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001']; // Add your frontend and other allowed origins
+const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001','https://assignment-project-task-frontend.vercel.app']; // Add your frontend and other allowed origins
 
 app.use(cors({
   origin: function (origin, callback) {
