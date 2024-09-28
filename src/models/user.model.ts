@@ -10,7 +10,7 @@ interface UserInterface extends Document {
   email: string;
   password: string;
   userType: "user" | "admin" ;
-  avatar: string;
+  avatar?: string;
   refreshToken?: string;
   isBlock?: boolean;
   isDeleted?: boolean;

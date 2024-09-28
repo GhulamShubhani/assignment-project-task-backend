@@ -20,20 +20,78 @@ const getAllTask = asyncHandler(async (req:Request,res:Response)=>{
         throw new ApiError(500,error?.message);
     }
 })
-const getAllProjectTask = asyncHandler(async (req:Request,res:Response)=>{
-    
+const getAllProjectTask = asyncHandler(async (req: Request, res: Response) => {
     try {
-       const getAllProjectTaskList = await Task.find({isDeleted:false,userId:req.user?.userId,projectId:req.params.id})
-       if(!getAllProjectTaskList) throw new ApiError(400,"somwthinf went wrong")
-    
-        return res
-            .status(200)
-            .json(new ApiResponse(200, getAllProjectTaskList, "All  Task of Project fetch successfully !"));
-    } catch (error:any) {
-        console.log(error?.message);
-        throw new ApiError(500,error?.message);
+      // Parse page and limit from query params or set default values
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const skip = (page - 1) * limit;
+  
+      // Find all tasks for a given project with pagination
+      const tasks = await Task.aggregate([
+        {
+          $match: {
+            isDeleted: false,
+            userId: req.user?.userId,
+            projectId: req.params.id,
+          },
+        },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'userId',
+            foreignField: 'userId',
+            as: 'userDetails',
+          },
+        },
+        {
+          $unwind: '$userDetails',
+        },
+        {
+          $project: {
+            "__v": 0,
+            "createdAt": 0,
+            "updatedAt": 0,
+            "isDeleted": 0,
+            'userDetails.password': 0,
+            'userDetails.refreshToken': 0,
+            'userDetails.createdAt': 0,
+            'userDetails.updatedAt': 0,
+            'userDetails.__v': 0,
+            'userDetails.isDeleted': 0,
+          },
+        },
+        {
+          $skip: skip, // Skip the first n documents
+        },
+        {
+          $limit: limit, // Limit the number of documents returned
+        },
+      ]);
+  
+      if (!tasks.length) throw new ApiError(400, 'No tasks found.');
+  
+      const totalTasks = await Task.countDocuments({
+        isDeleted: false,
+        userId: req.user?.userId,
+        projectId: req.params.id,
+      });
+  
+      return res.status(200).json(
+        new ApiResponse(200, {
+          tasks,
+          totalTasks,
+          totalPages: Math.ceil(totalTasks / limit),
+          currentPage: page,
+          pageSize: limit,
+        }, 'Tasks fetched successfully!')
+      );
+    } catch (error: any) {
+      console.log(error?.message);
+      throw new ApiError(500, error?.message);
     }
-})
+  });
+  
 const getTask = asyncHandler(async (req:Request,res:Response)=>{
     console.log(req.params.id,"req.params.taskid");
 
@@ -55,7 +113,7 @@ const createTask = asyncHandler(async (req:Request,res:Response)=>{
         const {priority,status,projectId,taskName} = req.body;
         if(!(status && priority && projectId && taskName)) throw new ApiError(400,"field is missing");
         const isTaskExist = await Task.findOne({taskName})
-        if(isTaskExist) throw new ApiError(400,"Project already exist");
+        if(isTaskExist) throw new ApiError(400,"Task already exist");
     
         const task_id = `task${taskName.split(" ")[0]}${Math.ceil(Math.random() * 100)}${Date.now()}`
     
@@ -99,8 +157,8 @@ const updateTask = asyncHandler(async (req:Request,res:Response)=>{
         if(!newTaskInstance) throw new ApiError(500,"Task not create");
     
         return res
-            .status(201)
-            .json(new ApiResponse(201, newTaskInstance, "Task updated successfully"));
+            .status(200)
+            .json(new ApiResponse(200, newTaskInstance, "Task updated successfully"));
     } catch (error:any) {
         console.log(error?.message);
         throw new ApiError(500,error?.message);
