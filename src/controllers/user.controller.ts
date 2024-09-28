@@ -118,7 +118,7 @@ const userLoginFuntion = asyncHandler(
       );
 
       let loginUser:any = await User.findById({_id:isValidUser?._id}).select('-password -refreshToken')
-      
+      loginUser = loginUser.toObject();
       loginUser.accessToken = accessToken
       res.status(200).cookie("accessToken",accessToken,options).cookie("refreshToken",refreshToken,options).json(new ApiResponse(200,loginUser,"login Successfully"))
     } catch (error) {
