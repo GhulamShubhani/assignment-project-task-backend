@@ -1,0 +1,9 @@
+node_modules/
+jspm_packages/
+*.env
+.env
+.env*
+./dict
+/node_modules
+tsconfig
+package
