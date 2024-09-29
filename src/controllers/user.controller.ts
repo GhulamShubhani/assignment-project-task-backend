@@ -269,7 +269,9 @@ const userRefreshTokenFunction = asyncHandler(
       "-password -refreshToken"
     );
 
-    loginUser.accessToken = accessToken;
+    loginUser = loginUser.toObject();
+      loginUser.accessToken = accessToken;
+      loginUser.refreshToken = refreshToken;
     res
       .status(200)
       .cookie("accessToken", accessToken, options)
