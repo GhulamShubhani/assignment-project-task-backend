@@ -118,6 +118,7 @@ const userLoginFuntion = asyncHandler(
       }).select("-password -refreshToken");
       loginUser = loginUser.toObject();
       loginUser.accessToken = accessToken;
+      loginUser.refreshToken = refreshToken;
       res
         .status(200)
         .cookie("accessToken", accessToken, options)
